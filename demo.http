@@ -18,3 +18,5 @@ Content-Type: application/json
 @token = {{loginAdmin.response.body.access_token}}
 GET {{url}}/protected HTTP/1.1
 Authorization: Bearer {{token}}
+
+
