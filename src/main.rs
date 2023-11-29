@@ -1,18 +1,10 @@
-//! Example JWT authorization/authentication.
-//!
-//! Run with
-//!
-//! ```not_rust
-//! JWT_SECRET=secret cargo run -p example-jwt
-//! ```
-
 use axum::{
     async_trait,
     extract::FromRequestParts,
     http::{request::Parts, StatusCode},
-    response::{IntoResponse, Response},
+    response::{IntoResponse, Response, Html},
     routing::{get, post},
-    Json, RequestPartsExt, Router,
+    Json, RequestPartsExt, Router, Form,
 };
 use axum_extra::{
     headers::{authorization::Bearer, Authorization},
@@ -24,32 +16,6 @@ use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::fmt::Display;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
-
-// Quick instructions
-//
-// - get an authorization token:
-//
-// curl -s \
-//     -w '\n' \
-//     -H 'Content-Type: application/json' \
-//     -d '{"client_id":"foo","client_secret":"bar"}' \
-//     http://localhost:3000/authorize
-//
-// - visit the protected area using the authorized token
-//
-// curl -s \
-//     -w '\n' \
-//     -H 'Content-Type: application/json' \
-//     -H 'Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJiQGIuY29tIiwiY29tcGFueSI6IkFDTUUiLCJleHAiOjIwMDAwMDAwMDB9.NACdMoxTt232yt5bKf-6IKu6pwXV_EGzxnkhcPtvePY' \
-//     http://localhost:3000/protected
-//
-// - try to visit the protected area using an invalid token
-//
-// curl -s \
-//     -w '\n' \
-//     -H 'Content-Type: application/json' \
-//     -H 'Authorization: Bearer blahblahblah' \
-//     http://localhost:3000/protected
 
 static KEYS: Lazy<Keys> = Lazy::new(|| {
     let secret = std::env::var("JWT_SECRET").expect("JWT_SECRET must be set");
@@ -68,6 +34,7 @@ async fn main() {
 
     let app = Router::new()
         .route("/", get("<h1>Welcome to My Site - NeoInfo.com</h1>"))
+        .route("/form", get(show_form).post(accept_form))
         .route("/protected", get(protected))
         .route("/authorize", post(authorize));
 
@@ -198,4 +165,39 @@ enum AuthError {
     MissingCredentials,
     TokenCreation,
     InvalidToken,
+}
+#[derive(Deserialize, Debug)]
+struct Input {
+    name: String,
+    email: String,
+}
+
+async fn accept_form(Form(input):Form<Input>){
+    dbg!(&input);
+}
+
+async fn show_form()->Html<&'static str>{
+    Html(
+        r#"
+        <!doctype html>
+        <html>
+            <head></head>
+            <body>
+                <form action="/" method="post">
+                    <label for="name">
+                        Enter your name:
+                        <input type="text" name="name">
+                    </label>
+
+                    <label>
+                        Enter your email:
+                        <input type="text" name="email">
+                    </label>
+
+                    <input type="submit" value="Subscribe!">
+                </form>
+            </body>
+        </html>
+        "#,
+    ) 
 }

@@ -16,4 +16,9 @@ serde_json = "*"
 tokio = { version ="*", features = ["full"] }
 tracing = "*"
 tracing-subscriber = { version = "*", features = ["env-filter"] }
-
+pretty_env_logger = "*"
+env_logger = "*"
+config = "*"
+toml = "*"
+log = "*"
+sqlx = {version="*",features = ["runtime-tokio-rustls","sqlite"]}
